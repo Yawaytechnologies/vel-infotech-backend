@@ -6,7 +6,7 @@ RUN if [ -f ./mvnw ]; then ./mvnw -q -DskipTests package; else mvn -q -DskipTest
 RUN cp $(ls target/*-SNAPSHOT.jar 2>/dev/null || ls target/*.jar) /app/app.jar
 
 # ---------- run stage ----------
-FROM gcr.io/distroless/java21  # or eclipse-temurin:21-jre if you prefer
+FROM gcr.io/distroless/java21
 WORKDIR /app
 COPY --from=build /app/app.jar /app/app.jar
 EXPOSE 8080
