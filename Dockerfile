@@ -1,15 +1,22 @@
-# ---------- build stage ----------
-FROM eclipse-temurin:21-jdk AS build
+# ---------- Build stage ----------
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY . .
-RUN if [ -f ./mvnw ]; then ./mvnw -q -DskipTests package; else mvn -q -DskipTests package; fi
-RUN cp $(ls target/*-SNAPSHOT.jar 2>/dev/null || ls target/*.jar) /app/app.jar
 
-# ---------- run stage ----------
-FROM gcr.io/distroless/java21
+# 1) Cache deps
+COPY pom.xml .
+RUN mvn -q -DskipTests dependency:go-offline
+
+# 2) Build
+COPY src ./src
+RUN mvn -q -DskipTests package
+
+# ---------- Runtime stage ----------
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/app.jar /app/app.jar
-EXPOSE 8080
-USER nonroot:nonroot
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=70.0"
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+
+# copy the fat jar produced by spring-boot-maven-plugin
+COPY --from=build /app/target/registration-api-1.0.0.jar /app/app.jar
+
+# Render/Heroku-style: use $PORT if provided, default to 8000
+EXPOSE 8000
+ENTRYPOINT ["sh","-c","java -Dserver.port=${PORT:-8000} -jar /app/app.jar"]
