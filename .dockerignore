@@ -1,0 +1,10 @@
+target
+build
+.mvn/wrapper/maven-wrapper.jar
+.gradle
+**/*.iml
+**/.idea
+**/.DS_Store
+.git
+.github
+node_modules
