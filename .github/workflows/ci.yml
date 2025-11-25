@@ -31,6 +31,10 @@ jobs:
       pull-requests: write
     steps:
       - name: Enable auto-merge for PR
+        env:
+          GH_TOKEN: ${{ github.token }}   # 👈 this is the missing part
+          run: |
+            gh pr merge -R "Yawaytechnologies/vel-infotech-backend" --merge --auto "2"
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
           token: ${{ secrets.AUTO_MERGE_TOKEN }}
