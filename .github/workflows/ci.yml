@@ -41,3 +41,4 @@ jobs:
           repository: ${{ github.repository }}
           pull-request-number: ${{ github.event.pull_request.number }}
           merge-method: merge
+
