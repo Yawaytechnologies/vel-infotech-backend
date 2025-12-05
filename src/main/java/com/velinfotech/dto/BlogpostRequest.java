@@ -19,10 +19,6 @@ public class BlogpostRequest {
     @Size(max = 500)
     private String excerpt;
 
-    @Size(max = 255)
-    private String featuredImageUrl;
+    private String imageBase64;
 
-    @NotBlank
-    @Size(max = 50)
-    private String status;
 }
