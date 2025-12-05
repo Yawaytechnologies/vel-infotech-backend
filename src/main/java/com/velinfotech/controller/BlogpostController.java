@@ -1,56 +1,67 @@
 package com.velinfotech.controller;
 
-import com.velinfotech.model.Blogpost;
-import com.velinfotech.repository.BlogpostRepository;
+import com.velinfotech.dto.BlogpostRequest;
+import com.velinfotech.dto.BlogpostResponse;
+import com.velinfotech.service.BlogpostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/blogposts")
 @RequiredArgsConstructor
 public class BlogpostController {
 
-    private final BlogpostRepository blogpostRepository;
+    private final BlogpostService blogpostService;
 
-    // 🔔 Quick test endpoint – just to see API is alive
     @GetMapping("/ping")
     public String ping() {
         return "Blog API is up ✅";
     }
 
-    // ➕ Create blog post
+    // CREATE
     @PostMapping
-    public ResponseEntity<Blogpost> create(@RequestBody Blogpost input) {
-        // no status/visibility/slug – just save what client sends
-        Blogpost saved = blogpostRepository.save(input);
+    public ResponseEntity<BlogpostResponse> create(@Valid @RequestBody BlogpostRequest request) {
+        BlogpostResponse saved = blogpostService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    // 📜 Get all posts
-    @GetMapping
-    public List<Blogpost> getAll() {
-        return blogpostRepository.findAll();
+    // UPDATE
+    @PutMapping("/{id}")
+    public ResponseEntity<BlogpostResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody BlogpostRequest request
+    ) {
+        BlogpostResponse updated = blogpostService.update(id, request);
+        return ResponseEntity.ok(updated);
     }
 
-    // 🔍 Get by id
+    // GET BY ID
     @GetMapping("/{id}")
-    public ResponseEntity<Blogpost> getById(@PathVariable Long id) {
-        return blogpostRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<BlogpostResponse> getById(@PathVariable Long id) {
+        BlogpostResponse dto = blogpostService.getById(id);
+        return ResponseEntity.ok(dto);
     }
 
-    // 🗑️ Delete
+    // LIST WITH PAGINATION (optional, you can adjust params)
+    @GetMapping
+    public Page<BlogpostResponse> listAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+        return blogpostService.listAll(page, size, sortBy, direction);
+    }
+
+    // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!blogpostRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        blogpostRepository.deleteById(id);
+        blogpostService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
