@@ -11,9 +11,9 @@
     </parent>
 
     <groupId>com.velinfotech</groupId>
-    <artifactId>registration-api</artifactId>
+    <artifactId>Velinfotech-backend</artifactId>
     <version>1.0.0</version>
-    <name>Registration API</name>
+    <name>Velinfotech-backend</name>
     <description>Spring Boot Registration API with PostgreSQL and JPA</description>
 
     <properties>
