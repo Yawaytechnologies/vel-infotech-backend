@@ -6,6 +6,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -18,8 +20,11 @@ public class SecurityConfig {
                 // Use your WebConfig CORS settings
                 .cors(Customizer.withDefaults())
 
-                // Disable CSRF for API + Swagger testing
+                // Disable browser/login security features for this API service
                 .csrf(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
 
                 // Authorization rules
                 .authorizeHttpRequests(auth -> auth
@@ -33,10 +38,17 @@ public class SecurityConfig {
                         // Open APIs while you debug CORS (tighten later)
                         .requestMatchers("/api/**").permitAll()
 
-                        // Everything else – require auth
-                        .anyRequest().authenticated()
+                        // Everything else is outside the public API surface
+                        .anyRequest().denyAll()
                 );
 
         return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> {
+            throw new UsernameNotFoundException(username);
+        };
     }
 }
