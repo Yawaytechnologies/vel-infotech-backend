@@ -19,6 +19,10 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+        if (StringUtils.hasText(environment.getProperty("SPRING_DATASOURCE_URL"))) {
+            return;
+        }
+
         String databaseUrl = environment.getProperty("DATABASE_URL");
         if (!StringUtils.hasText(databaseUrl)) {
             return;
@@ -42,6 +46,10 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             Map<String, Object> properties
     ) {
         URI uri = URI.create(databaseUrl);
+        if (!StringUtils.hasText(uri.getHost())) {
+            return;
+        }
+
         StringBuilder jdbcUrl = new StringBuilder("jdbc:postgresql://")
                 .append(uri.getHost());
 
