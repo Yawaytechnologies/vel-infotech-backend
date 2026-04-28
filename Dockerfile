@@ -15,7 +15,7 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # copy the fat jar produced by spring-boot-maven-plugin
-COPY --from=build /app/target/registration-api-1.0.0.jar /app/app.jar
+COPY --from=build /app/target/Velinfotech-backend-1.0.0.jar /app/app.jar
 
 # Render/Heroku-style: use $PORT if provided, default to 8000
 EXPOSE 8000
