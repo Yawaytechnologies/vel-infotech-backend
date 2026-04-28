@@ -19,12 +19,18 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        if (StringUtils.hasText(environment.getProperty("SPRING_DATASOURCE_URL"))) {
+        String springDatasourceUrl = environment.getProperty("SPRING_DATASOURCE_URL");
+        String databaseUrl = environment.getProperty("DATABASE_URL");
+
+        logEnvironmentStatus(environment, springDatasourceUrl, databaseUrl);
+
+        if (StringUtils.hasText(springDatasourceUrl)) {
+            System.out.println("[database-config] Using SPRING_DATASOURCE_URL: " + maskUrl(springDatasourceUrl));
             return;
         }
 
-        String databaseUrl = environment.getProperty("DATABASE_URL");
         if (!StringUtils.hasText(databaseUrl)) {
+            System.out.println("[database-config] DATABASE_URL not provided. Falling back to application.properties datasource URL.");
             return;
         }
 
@@ -37,6 +43,10 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
         if (!properties.isEmpty()) {
             environment.getPropertySources().addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, properties));
+            System.out.println("[database-config] Using normalized DATABASE_URL: "
+                    + maskUrl(String.valueOf(properties.get("spring.datasource.url"))));
+        } else {
+            System.out.println("[database-config] DATABASE_URL was provided but was not a supported PostgreSQL URL.");
         }
     }
 
@@ -79,6 +89,23 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
     private String decode(String value) {
         return URLDecoder.decode(value, StandardCharsets.UTF_8);
+    }
+
+    private void logEnvironmentStatus(
+            ConfigurableEnvironment environment,
+            String springDatasourceUrl,
+            String databaseUrl
+    ) {
+        System.out.println("[database-config] SPRING_DATASOURCE_URL present: " + StringUtils.hasText(springDatasourceUrl));
+        System.out.println("[database-config] DATABASE_URL present: " + StringUtils.hasText(databaseUrl));
+        System.out.println("[database-config] DB_USERNAME present: " + StringUtils.hasText(environment.getProperty("DB_USERNAME")));
+        System.out.println("[database-config] DB_PASSWORD present: " + StringUtils.hasText(environment.getProperty("DB_PASSWORD")));
+    }
+
+    private String maskUrl(String value) {
+        return value
+                .replaceAll("(?i)(password=)[^&]+", "$1****")
+                .replaceAll("(//[^:/@]+:)[^@]+(@)", "$1****$2");
     }
 
     @Override
