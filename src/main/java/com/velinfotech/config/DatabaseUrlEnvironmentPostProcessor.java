@@ -61,8 +61,14 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
         jdbcUrl.append(StringUtils.hasText(uri.getPath()) ? uri.getPath() : "/postgres");
 
-        if (StringUtils.hasText(uri.getQuery())) {
-            jdbcUrl.append('?').append(uri.getQuery());
+        String query = uri.getQuery();
+        if (StringUtils.hasText(query)) {
+            jdbcUrl.append('?').append(query);
+            if (!query.contains("sslmode")) {
+                jdbcUrl.append("&sslmode=require");
+            }
+        } else {
+            jdbcUrl.append("?sslmode=require");
         }
 
         properties.put("spring.datasource.url", jdbcUrl.toString());
