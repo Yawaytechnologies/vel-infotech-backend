@@ -1,5 +1,4 @@
-// src/main/java/com/velinfotech/service/impl/JobApplicationServiceImpl.java
-package com.velinfotech.service.impl;
+package com.velinfotech.service;
 
 import com.velinfotech.dto.JobApplicationRequest;
 import com.velinfotech.dto.JobApplicationResponse;
