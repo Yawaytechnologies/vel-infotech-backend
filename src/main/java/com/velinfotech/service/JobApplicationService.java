@@ -12,6 +12,8 @@ public interface JobApplicationService {
     JobApplicationResponse applyForJob(Long jobId, JobApplicationRequest request);
 
     // READ
+    List<JobApplicationResponse> getAllApplications();
+
     List<JobApplicationResponse> getApplicationsForJob(Long jobId);
 
     JobApplicationResponse getApplicationById(Long jobId, Long applicationId);

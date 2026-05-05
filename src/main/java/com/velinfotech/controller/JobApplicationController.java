@@ -46,6 +46,12 @@ public class JobApplicationController {
 
     /* ====================== READ ====================== */
 
+    // Get ALL applications (admin view)
+    @GetMapping("/applications")
+    public ResponseEntity<List<JobApplicationResponse>> getAllApplications() {
+        return ResponseEntity.ok(jobApplicationService.getAllApplications());
+    }
+
     // Get all applications for a specific job
     @GetMapping("/{jobId}/applications")
     public ResponseEntity<List<JobApplicationResponse>> getApplicationsForJob(

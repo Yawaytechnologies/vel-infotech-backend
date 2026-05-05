@@ -40,6 +40,15 @@ public class JobApplicationServiceImpl implements JobApplicationService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<JobApplicationResponse> getAllApplications() {
+        return jobApplicationRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<JobApplicationResponse> getApplicationsForJob(Long jobId) {
         List<JobApplication> applications = jobApplicationRepository.findByJobId(jobId);
 
