@@ -35,6 +35,9 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
 
+                        // Health check for Render
+                        .requestMatchers("/", "/api/health").permitAll()
+
                         // Open APIs while you debug CORS (tighten later)
                         .requestMatchers("/api/**").permitAll()
 
