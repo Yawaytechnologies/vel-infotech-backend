@@ -58,8 +58,9 @@ public class Blogpost {
     @Column(name = "featured_image_url", columnDefinition = "TEXT")
     private String featuredImageUrl;
 
-    // Null for posts that predate this column; see BlogpostSlugBackfill.
-    @Column(name = "created_at", updatable = false)
+    // Null for posts that predate this column; see BlogpostSlugBackfill, which
+    // needs to be able to write it — hence no updatable = false here.
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
