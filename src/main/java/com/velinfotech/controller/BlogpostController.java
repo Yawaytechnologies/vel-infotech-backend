@@ -47,6 +47,13 @@ public class BlogpostController {
         return ResponseEntity.ok(dto);
     }
 
+    // GET BY SLUG — backs /blog/{slug} on the site
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<BlogpostResponse> getBySlug(@PathVariable String slug) {
+        BlogpostResponse dto = blogpostService.getBySlug(slug);
+        return ResponseEntity.ok(dto);
+    }
+
     // LIST WITH PAGINATION (optional, you can adjust params)
     @GetMapping
     public Page<BlogpostResponse> listAll(
