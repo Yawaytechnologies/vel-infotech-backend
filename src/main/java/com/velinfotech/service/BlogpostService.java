@@ -11,10 +11,6 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Base64;
 
 /**
  * Class-level @Transactional is load-bearing, not decoration: content, excerpt and
@@ -28,10 +24,13 @@ import java.util.Base64;
 public class BlogpostService {
 
     private final BlogpostRepository blogpostRepository;
+    private final BlogImageService blogImageService;
 
     @Autowired
-    public BlogpostService(BlogpostRepository blogpostRepository) {
+    public BlogpostService(BlogpostRepository blogpostRepository,
+                           BlogImageService blogImageService) {
         this.blogpostRepository = blogpostRepository;
+        this.blogImageService = blogImageService;
     }
 
     // --- public API ---
@@ -48,9 +47,8 @@ public class BlogpostService {
         String requested = hasText(request.getSlug()) ? request.getSlug() : request.getTitle();
         entity.setSlug(SlugGenerator.uniqueSlug(requested, blogpostRepository::existsBySlug));
 
-        // 🔁 convert URL -> base64 if needed
-        String imageValue = toBase64IfUrl(request.getImageBase64());
-        entity.setFeaturedImageUrl(imageValue);
+        // Store the bytes and keep only a URL on the post.
+        entity.setFeaturedImageUrl(blogImageService.toServableUrl(request.getImageBase64()));
 
         Blogpost saved = blogpostRepository.save(entity);
         return toResponse(saved);
@@ -79,8 +77,7 @@ public class BlogpostService {
             entity.setSlug(SlugGenerator.uniqueSlug(request.getTitle(), blogpostRepository::existsBySlug));
         }
 
-        String imageValue = toBase64IfUrl(request.getImageBase64());
-        entity.setFeaturedImageUrl(imageValue);
+        entity.setFeaturedImageUrl(blogImageService.toServableUrl(request.getImageBase64()));
 
         Blogpost saved = blogpostRepository.save(entity);
         return toResponse(saved);
@@ -150,52 +147,10 @@ public class BlogpostService {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
-        // expose base64 as imageBase64
-        dto.setImageBase64(entity.getFeaturedImageUrl());
+        // Field name kept for client compatibility; it now carries a URL, not base64.
+        dto.setImageBase64(blogImageService.toAbsolute(entity.getFeaturedImageUrl()));
 
         return dto;
     }
 
-    private String toBase64IfUrl(String imageField) {
-        if (imageField == null || imageField.isBlank()) {
-            return imageField;
-        }
-
-        String lower = imageField.toLowerCase();
-
-        if (lower.startsWith("http://") || lower.startsWith("https://")) {
-            try {
-                return downloadImageAsBase64(imageField);
-            } catch (Exception e) {
-                e.printStackTrace();
-                // if conversion fails, at least keep the original
-                return imageField;
-            }
-        }
-
-        // assume it's already base64 or a data URL
-        return imageField;
-    }
-
-    /**
-     * Downloads the image bytes and returns a data URL:
-     * data:image/*;base64,AAAA...
-     */
-    private String downloadImageAsBase64(String imageUrl) throws Exception {
-        URL url = new URL(imageUrl);
-        try (InputStream in = url.openStream();
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = in.read(buffer)) != -1) {
-                baos.write(buffer, 0, read);
-            }
-
-            byte[] bytes = baos.toByteArray();
-            String base64 = Base64.getEncoder().encodeToString(bytes);
-
-            return "data:image/*;base64," + base64;
-        }
-    }
 }

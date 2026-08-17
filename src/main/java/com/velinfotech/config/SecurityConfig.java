@@ -80,6 +80,8 @@ public class SecurityConfig {
                         /* ---------- Published content the website reads ---------- */
 
                         .requestMatchers(HttpMethod.GET, "/api/blogposts", "/api/blogposts/**").permitAll()
+                        // Post images: public by definition, they appear on the site.
+                        .requestMatchers(HttpMethod.GET, "/api/images/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/job-posts", "/api/job-posts/*").permitAll()
                         // Single wildcard on purpose: /api/consulting/job-posts/{id} is public,
                         // but /api/consulting/job-posts/{id}/applications must not be.

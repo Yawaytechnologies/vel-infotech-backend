@@ -2,6 +2,7 @@ package com.velinfotech.config;
 
 import com.velinfotech.model.Blogpost;
 import com.velinfotech.repository.BlogpostRepository;
+import com.velinfotech.service.BlogImageService;
 import com.velinfotech.service.BlogpostService;
 import com.velinfotech.util.SlugGenerator;
 import org.slf4j.Logger;
@@ -37,9 +38,12 @@ public class BlogpostSlugBackfill implements ApplicationRunner {
     private static final int BACKDATE_INTERVAL_DAYS = 45;
 
     private final BlogpostRepository blogpostRepository;
+    private final BlogImageService blogImageService;
 
-    public BlogpostSlugBackfill(BlogpostRepository blogpostRepository) {
+    public BlogpostSlugBackfill(BlogpostRepository blogpostRepository,
+                                BlogImageService blogImageService) {
         this.blogpostRepository = blogpostRepository;
+        this.blogImageService = blogImageService;
     }
 
     @Override
@@ -47,6 +51,45 @@ public class BlogpostSlugBackfill implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         backfillSlugs();
         backfillPublishDates();
+        migrateInlineImages();
+    }
+
+    /**
+     * Moves featured images out of the post row and behind /api/images/{id}.
+     *
+     * They were stored as base64 data URIs, so every byte was inlined into the HTML
+     * on every request. Runs once; afterwards no post holds a data URI and this is a
+     * single query.
+     */
+    private void migrateInlineImages() {
+        List<Blogpost> inlined = blogpostRepository.findAll().stream()
+                .filter(post -> post.getFeaturedImageUrl() != null
+                        && post.getFeaturedImageUrl().startsWith("data:"))
+                .toList();
+
+        if (inlined.isEmpty()) return;
+
+        long freed = 0;
+
+        for (Blogpost post : inlined) {
+            String original = post.getFeaturedImageUrl();
+            String url = blogImageService.toServableUrl(original);
+
+            if (url.startsWith("data:")) {
+                log.warn("Could not migrate the image on blog post {}; leaving it inline", post.getId());
+                continue;
+            }
+
+            freed += original.length();
+            post.setFeaturedImageUrl(url);
+
+            log.info("Migrated image on blog post {} -> {} ({} chars inline)",
+                    post.getId(), url, original.length());
+        }
+
+        blogpostRepository.saveAll(inlined);
+        log.info("Migrated {} inline image(s), removing {} characters of base64 from page HTML",
+                inlined.size(), freed);
     }
 
     /**
