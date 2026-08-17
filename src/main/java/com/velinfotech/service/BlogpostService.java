@@ -58,7 +58,7 @@ public class BlogpostService {
 
     public BlogpostResponse update(Long id, BlogpostRequest request) {
         Blogpost entity = blogpostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Blog post not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Blog post not found: " + id));
 
         entity.setTitle(request.getTitle());
         entity.setContent(request.getContent());
@@ -95,7 +95,7 @@ public class BlogpostService {
 
     public void delete(Long id) {
         if (!blogpostRepository.existsById(id)) {
-            throw new RuntimeException("Blog post not found: " + id);
+            throw new ResourceNotFoundException("Blog post not found: " + id);
         }
         blogpostRepository.deleteById(id);
     }
@@ -103,7 +103,7 @@ public class BlogpostService {
     @Transactional(readOnly = true)
     public BlogpostResponse getById(Long id) {
         Blogpost entity = blogpostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Blog post not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Blog post not found: " + id));
         return toResponse(entity);
     }
 
